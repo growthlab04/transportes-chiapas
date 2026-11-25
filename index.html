@@ -346,6 +346,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
 .sres button:last-child{border-bottom:0}
 .sres button:hover,.sres button:focus-visible{background:#F4FBFA}
 .sres button span{color:var(--sea);font-weight:800;white-space:nowrap}
+.sres p.sh{padding:.6rem 1rem .3rem;font-size:.76rem;font-weight:800;color:var(--mute)}
 .sres p{padding:.8rem 1rem;font-size:.88rem;color:var(--mute);font-weight:600}
 .zsel{margin-top:1rem;border-radius:18px;padding:1.1rem 1.2rem;background:var(--navy);color:#fff;position:relative;overflow:hidden;min-height:120px}
 .zsel::before{content:"";position:absolute;width:220px;height:220px;right:-90px;top:-110px;border-radius:50%;background:var(--zc,rgba(95,224,214,.4));filter:blur(36px);opacity:.7}
@@ -564,14 +565,14 @@ footer{background:linear-gradient(90deg,#08202E,#0D2C3D)}
 
         <div class="subs" data-i="1" hidden>
           <h3 class="sq" id="qZone">¿En qué zona está tu hotel o destino?</h3>
-          <p class="sqh" data-t="zHelp">Toca tu zona en el mapa o busca tu colonia. El precio depende de la zona.</p>
+          <p class="sqh" data-t="zHelp">Escribe el nombre de tu hotel o colonia y te marcamos la zona. También puedes tocarla en el mapa.</p>
           <div class="bz">
             <div class="bz-map">
               <div class="bmap" id="zmB"></div>
               <div class="zchips" id="zchips"></div>
             </div>
             <div class="bz-side">
-              <div class="f srch"><label for="cq" data-t="lSearch">Busca tu colonia</label><input id="cq" autocomplete="off" placeholder="Ej. Potinaspak, Terán, Centro"><div class="sres" id="sres" hidden></div></div>
+              <div class="f srch"><label for="cq" data-t="lSearch">Busca tu hotel o colonia</label><input id="cq" autocomplete="off" placeholder="Ej. Marriott, Holiday Inn, Centro"><div class="sres" id="sres" hidden></div></div>
               <div class="zsel" id="zsel" hidden></div>
               <div class="zfar"><span class="lb" data-t="lFar">¿Vas fuera de Tuxtla?</span><div class="farb" id="farb"></div></div>
             </div>
@@ -3030,7 +3031,8 @@ $("#zmInfo").addEventListener("click",e=>{const b=e.target.closest("[data-zz]");
 
 /* paso de zona en el formulario */
 const norm=t=>t.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
-const COL=[];ZONES.slice(0,4).forEach((z,i)=>z.c.split(/,\s*/).forEach(c=>COL.push({c,z:i})));COL.push({c:"Centro",z:1});
+const HOTELS=[{"c": "Holiday Inn", "z": 2, "h": 1}, {"c": "Hilton Garden Inn", "z": 2, "h": 1}, {"c": "City Express", "z": 2, "h": 1}, {"c": "Fiesta Inn", "z": 2, "h": 1}, {"c": "Vista Inn", "z": 2, "h": 1}, {"c": "Holiday Inn Express", "z": 2, "h": 1}, {"c": "Palace Inn", "z": 2, "h": 1}, {"c": "Premier Inn", "z": 2, "h": 1}, {"c": "Hotel Plaza", "z": 2, "h": 1}, {"c": "Hotel Madrid", "z": 2, "h": 1}, {"c": "Hotel del Carmen", "z": 2, "h": 1}, {"c": "Diverxo", "z": 2, "h": 1}, {"c": "Palmarecas", "z": 2, "h": 1}, {"c": "Marriott", "z": 2, "h": 1}, {"c": "Casa del Agua", "z": 2, "h": 1}, {"c": "Casa Kolping", "z": 2, "h": 1}, {"c": "Granda Inn", "z": 1, "h": 1}, {"c": "Plaza Amalia", "z": 1, "h": 1}, {"c": "Hotel Maya", "z": 1, "h": 1}, {"c": "Hotel Narváez", "z": 1, "h": 1}, {"c": "Casa Blanca", "z": 1, "h": 1}, {"c": "Axcan", "z": 1, "h": 1}, {"c": "Hotel San Miguel", "z": 1, "h": 1}, {"c": "María Eugenia", "z": 1, "h": 1}, {"c": "Los Pinos", "z": 1, "h": 1}, {"c": "Tres Central", "z": 1, "h": 1}, {"c": "Don Cándido", "z": 1, "h": 1}, {"c": "Es Suite", "z": 0, "h": 1}, {"c": "Makarios", "z": 0, "h": 1}, {"c": "Fiesta Inn Fashion Mall", "z": 0, "h": 1}, {"c": "City Express Jr", "z": 0, "h": 1}, {"c": "Sumidero", "z": 0, "h": 1}];
+const COL=HOTELS.slice();ZONES.slice(0,4).forEach((z,i)=>z.c.split(/,\s*/).forEach(c=>{if(!COL.some(o=>norm(o.c)===norm(c)))COL.push({c,z:i})}));COL.push({c:"Centro",z:1});
 let pickedCol="";
 function setZone(i,col){st.z=i;if(col!=null){pickedCol=col;$("#colonia").value=col}
   markMap($("#zmB"),i);
@@ -3057,13 +3059,15 @@ function buildZoneStep(){
 bindMap($("#zmB"),i=>setZone(i));
 $("#zchips").addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(b)setZone(+b.dataset.z)});
 $("#farb").addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(b)setZone(+b.dataset.z)});
-function searchCol(){const q=norm($("#cq").value),r=$("#sres"),en=L==="en";if(q.length<2){r.hidden=true;return}
-  const hits=COL.filter(o=>norm(o.c).includes(q)).slice(0,6);
-  r.innerHTML=hits.length?hits.map(o=>`<button type="button" data-z="${o.z}" data-c="${o.c}">${o.c}<span>${en?"Zone":"Zona"} ${o.z+1}</span></button>`).join("")
+function searchCol(){const q=norm($("#cq").value),r=$("#sres"),en=L==="en";
+  const row=o=>`<button type="button" data-z="${o.z}" data-c="${o.c}"${o.h?' data-h="1"':""}>${o.c}<span>${en?"Zone":"Zona"} ${o.z+1}, ${fmt(ZONES[o.z].p)}</span></button>`;
+  if(q.length<2){r.innerHTML=`<p class="sh">${en?"Most requested hotels":"Hoteles más solicitados"}</p>`+HOTELS.slice(0,6).map(row).join("");r.hidden=false;return}
+  const hits=COL.filter(o=>norm(o.c).split(/\s+/).some(w=>w.startsWith(q))||norm(o.c).includes(q)).sort((a,b)=>(b.h||0)-(a.h||0)).slice(0,7);
+  r.innerHTML=hits.length?hits.map(row).join("")
    :`<p>${en?"We couldn't find it. Pick the closest zone on the map and we'll confirm it on WhatsApp.":"No la encontramos. Elige la zona más cercana en el mapa y la confirmamos por WhatsApp."}</p>`;
   r.hidden=false}
 $("#cq").addEventListener("input",searchCol);$("#cq").addEventListener("focus",searchCol);
-$("#sres").addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(!b)return;setZone(+b.dataset.z,b.dataset.c);$("#cq").value=b.dataset.c;$("#sres").hidden=true});
+$("#sres").addEventListener("click",e=>{const b=e.target.closest("[data-z]");if(!b)return;if(b.dataset.h){setZone(+b.dataset.z);$("#hotel").value=b.dataset.c}else setZone(+b.dataset.z,b.dataset.c);$("#cq").value=b.dataset.c;$("#sres").hidden=true;calc()});
 document.addEventListener("click",e=>{if(!e.target.closest(".srch"))$("#sres").hidden=true});
 buildZoneStep();zInfo(0);
 
